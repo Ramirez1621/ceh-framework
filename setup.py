@@ -2,8 +2,6 @@
 """
 setup.py — Instalador interactivo del CEH Framework
 Detecta la distro, verifica herramientas e instala las que falten.
-
-Uso: python3 setup.py
 """
 import sys
 import os
@@ -11,7 +9,7 @@ import subprocess
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# ── Verificar rich antes de todo ──────────────────────────────────────────────
+# ── Verificar rich antes de todo ────────────────────────────
 def _bootstrap_rich():
     try:
         import rich

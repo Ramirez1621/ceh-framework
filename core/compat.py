@@ -1,7 +1,3 @@
-"""
-core/compat.py — Capa de compatibilidad multi-distro
-Compatible con: Kali Linux, Ubuntu/Debian, Arch Linux / Manjaro
-"""
 import os
 import sys
 import shutil

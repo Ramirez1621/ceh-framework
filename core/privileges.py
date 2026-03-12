@@ -1,12 +1,3 @@
-"""
-core/privileges.py — Detección de privilegios
-Compatible con: Kali Linux, Ubuntu, Arch Linux
-
-Provee:
-  IS_ROOT      → True si el proceso corre como root
-  SUDO_PREFIX  → ["sudo"] si no es root, [] si ya es root
-  require_root() → imprime error y retorna False si no hay root
-"""
 import os
 from rich.console import Console
 from rich.panel import Panel

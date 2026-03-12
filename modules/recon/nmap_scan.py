@@ -1,7 +1,3 @@
-"""
-Módulo de escaneo con Nmap
-Compatible con: Kali Linux, Ubuntu, Arch Linux
-"""
 import os
 from rich.console import Console
 from rich.table import Table
@@ -137,9 +133,6 @@ def run_nmap(target: str, silent: bool = False) -> str | None:
             print_info("Flag [bold]-Pn[/bold] activado.")
 
     # ── Output file ───────────────────────────────────────────────────────────
-    # Usamos el directorio reports/ del proyecto (no /tmp) para evitar
-    # conflictos de permisos cuando nmap corre con sudo pero el proceso
-    # padre fue iniciado por el usuario normal.
     import os as _os
     from core.utils import REPORTS_DIR as _REPORTS_DIR
     _os.makedirs(_REPORTS_DIR, exist_ok=True)

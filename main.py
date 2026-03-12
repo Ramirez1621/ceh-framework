@@ -13,39 +13,32 @@ def _resolve_root() -> str:
     """Resuelve el directorio raíz del proyecto de forma robusta."""
     candidates = []
 
-    # Estrategia 1: Path(__file__).resolve() — más robusta
     try:
         candidates.append(Path(__file__).resolve().parent)
     except Exception:
         pass
 
-    # Estrategia 2: os.path.realpath — alternativa si resolve() falla
     try:
         candidates.append(Path(os.path.realpath(__file__)).parent)
     except Exception:
         pass
 
-    # Estrategia 3: basado en argv[0]
     try:
         candidates.append(Path(os.path.realpath(sys.argv[0])).parent)
     except Exception:
         pass
 
-    # Estrategia 4: CWD como último recurso
     candidates.append(Path(os.getcwd()))
 
-    # Retornar el primero que contenga core/banner.py (validación real)
     for candidate in candidates:
         if (candidate / "core" / "banner.py").exists():
             return str(candidate)
 
-    # Fallback absoluto
     return str(candidates[0]) if candidates else os.getcwd()
 
 
 ROOT = _resolve_root()
 
-# Limpiar y reconstruir sys.path sin duplicados
 for _p in [ROOT, str(Path(ROOT).parent)]:
     while _p in sys.path:
         sys.path.remove(_p)
@@ -62,7 +55,6 @@ def _bootstrap():
 
     print("[CEH Framework] Instalando dependencia 'rich'...")
 
-    # Detectar entorno externally-managed (Arch/Manjaro, PEP 668)
     flags = []
     for p in sys.path:
         try:
@@ -87,22 +79,22 @@ def _bootstrap():
 _bootstrap()
 
 # ── Imports principales ────────────────────────────────────────────────────────
-from rich.console import Console          # noqa: E402
-from rich.table import Table              # noqa: E402
-from rich.panel import Panel              # noqa: E402
-from rich.prompt import Prompt, Confirm   # noqa: E402
-from rich import box                      # noqa: E402
+from rich.console import Console          
+from rich.table import Table              
+from rich.panel import Panel              
+from rich.prompt import Prompt, Confirm   
+from rich import box                      
 
-from core.banner import print_banner, console                          # noqa: E402
-from core.utils import print_info, print_error, separator, prompt_target  # noqa: E402
+from core.banner import print_banner, console                          
+from core.utils import print_info, print_error, separator, prompt_target  
 from core.privileges import IS_ROOT, print_privilege_status
-from core.compat import detect_distro, check_tools, CORE_TOOLS, EXPLOIT_TOOLS  # noqa: E402
-from modules.recon.nmap_scan import run_nmap                           # noqa: E402
-from modules.recon.osint import run_whois, run_dns_enum, run_recon_full  # noqa: E402
-from modules.exploit.msf_handler import run_exploit_module, run_listener  # noqa: E402
-from modules.vuln.sqli import run_sqli_module                             # noqa: E402
-from modules.exploit.searchsploit import run_searchsploit_from_nmap           # noqa: E402
-from modules.wifi.wifi_audit import run_wifi_audit                                # noqa: E402
+from core.compat import detect_distro, check_tools, CORE_TOOLS, EXPLOIT_TOOLS  
+from modules.recon.nmap_scan import run_nmap                           
+from modules.recon.osint import run_whois, run_dns_enum, run_recon_full  
+from modules.exploit.msf_handler import run_exploit_module, run_listener  
+from modules.vuln.sqli import run_sqli_module                             
+from modules.exploit.searchsploit import run_searchsploit_from_nmap           
+from modules.wifi.wifi_audit import run_wifi_audit                                
 
 
 # ─── Menús ─────────────────────────────────────────────────────────────────────

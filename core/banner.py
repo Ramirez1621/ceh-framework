@@ -1,7 +1,3 @@
-"""
-core/banner.py — Banner profesional del CEH Framework
-Estilo: Corporativo / Azul-Cyan
-"""
 import time
 import random
 import shutil

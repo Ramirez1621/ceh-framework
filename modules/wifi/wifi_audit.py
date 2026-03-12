@@ -1,7 +1,4 @@
 """
-modules/wifi/wifi_audit.py — Módulo de Auditoría WiFi
-CEH Framework — Compatible con Kali Linux, Ubuntu, Arch Linux
-
 Flujo completo:
   1. Detectar interfaces WiFi disponibles
   2. Validar capacidades de monitor mode (iw / iwconfig)
@@ -53,12 +50,12 @@ CAPTURE_DIR  = "/tmp/ceh_wifi"
 
 @dataclass
 class WifiInterface:
-    name:       str          # wlan0, wlan1, etc.
+    name:       str         
     driver:     str = ""
     chipset:    str = ""
     mac:        str = ""
-    mode:       str = "managed"   # managed | monitor
-    monitor_name: str = ""        # wlan0mon después de airmon-ng
+    mode:       str = "managed"  
+    monitor_name: str = ""       
     supports_monitor: bool = False
     supports_injection: bool = False
 
@@ -67,8 +64,8 @@ class WifiNetwork:
     bssid:    str
     essid:    str
     channel:  str
-    power:    str          # dBm
-    enc:      str          # WPA2, WPA, WEP, OPN
+    power:    str          
+    enc:      str         
     cipher:   str
     auth:     str
     clients:  int = 0
@@ -292,7 +289,6 @@ def _enable_monitor_mode(iface: WifiInterface) -> str | None:
             if mode == "monitor" and name != iface.name:
                 mon_name = name
                 break
-        # Puede que la misma interfaz pasó a monitor (algunos drivers)
         if not mon_name and ifaces_after.get(iface.name) == "monitor":
             mon_name = iface.name
 
@@ -636,10 +632,8 @@ def _get_rockyou() -> str | None:
         print_info(f"Usando rockyou ya descomprimido: [bold]{ROCKYOU_PLAIN}[/bold] ({size_mb:.0f} MB)")
         return ROCKYOU_PLAIN
 
-    # 2. Buscar fuente y descomprimir con zcat (más robusto que Python gzip para symlinks)
     for src in ROCKYOU_SEARCH:
         sp = Path(src)
-        # Resolver symlink manualmente para obtener el target real
         real_src = src
         try:
             if sp.is_symlink():
@@ -659,7 +653,6 @@ def _get_rockyou() -> str | None:
         print_info(f"Encontrado: [bold]{real_src}[/bold] ({real_size/1_048_576:.0f} MB) — descomprimiendo...")
         print_warning("Esto puede tardar 30-60 segundos la primera vez...")
 
-        # Intentar zcat primero (maneja .gz y archivos gzip con cualquier extensión)
         for decomp_cmd in [
             ["zcat", real_src],
             ["gunzip", "-c", real_src],
@@ -696,12 +689,10 @@ def _get_rockyou() -> str | None:
             plain.unlink(missing_ok=True)
         except Exception as e:
             plain.unlink(missing_ok=True)
-            # No es gzip — quizás ya está descomprimido pero es grande
             if Path(real_src).stat().st_size > 50_000_000:
                 print_info(f"Usando directamente (no comprimido): [bold]{real_src}[/bold]")
                 return real_src
 
-    # 3. Descargar directo descomprimido a /tmp
     print_warning("rockyou.txt no encontrado en el sistema. Descargando (~130 MB)...")
     URL = "https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt"
     for dl in ["wget", "curl"]:
@@ -763,7 +754,7 @@ def _capture_handshake(mon_iface: str, network: WifiNetwork,
 
     time.sleep(3)
 
-    # Deauth para forzar reconexión (si hay clientes)
+    # Deauth para forzar reconexión
     handshake_found = False
 
     with Progress(
@@ -856,7 +847,6 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
         print_warning("wifite no está instalado.")
         return False, ""
 
-    # Verificar cowpatty (requerido por wifite para crackear WPA)
     for dep_tool, dep_pkg in [("tshark", "tshark"), ("cowpatty", "cowpatty")]:
         if not check_tool(dep_tool):
             print_warning(f"[bold]{dep_tool}[/bold] no instalado — requerido por wifite.")
@@ -876,7 +866,6 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
             else:
                 print_warning(f"No se pudo instalar {dep_tool} — wifite puede fallar.")
 
-    # Verificar tshark (mantenemos el check original también)
     if not check_tool("tshark"):
         print_warning("[bold]tshark[/bold] no está instalado — wifite lo necesita para escanear.")
         from core.compat import detect_distro
@@ -897,7 +886,6 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
     print_info(f"Atacando [bold]{network.essid}[/bold] con wifite...")
     print_warning("Ctrl+C para saltar al método manual.\n")
 
-    # Intentar instalar hcxpcapngtool (wifite lo usa para WPA cracking)
     if not check_tool("hcxpcapngtool"):
         print_info("Instalando [bold]hcxpcapngtool[/bold] (requerido por wifite para crackear)...")
         from core.compat import detect_distro as _dd
@@ -911,7 +899,6 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
         else:
             print_warning("hcxpcapngtool no disponible — wifite usará solo aircrack.")
 
-    # Usar rockyou descomprimido si existe, si no el path original
     rockyou_dict = ROCKYOU_PLAIN if Path(ROCKYOU_PLAIN).exists() and Path(ROCKYOU_PLAIN).stat().st_size > 50_000_000 else "/usr/share/wordlists/rockyou.txt"
 
     cmd = SUDO_PREFIX + [
@@ -922,18 +909,15 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
         "--kill",
         "--dict",     rockyou_dict,
     ]
-    # Agregar --aircrack-only solo si hcxpcapngtool no está disponible
     if not check_tool("hcxpcapngtool"):
         cmd.append("--aircrack-only")
     print_info(f"Ejecutando: [bold]{' '.join(cmd)}[/bold]\n")
 
-    # Guardar output en archivo para análisis posterior
     os.makedirs(CAPTURE_DIR, exist_ok=True)
     wifite_log = f"{CAPTURE_DIR}/wifite_output.txt"
     _ansi_re = re.compile(r"\x1b\[[0-9;]*[mGKHF]|\x1b\([AB]|\r")
 
     try:
-        # Tee: mostrar en pantalla Y guardar en archivo limpio (sin ANSI)
         with open(wifite_log, "w") as log_f:
             proc = subprocess.Popen(
                 cmd,
@@ -944,8 +928,8 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
             )
             output_lines = []
             for line in proc.stdout:
-                print(line, end="", flush=True)        # pantalla: con colores
-                clean = _ansi_re.sub("", line)         # archivo: sin ANSI
+                print(line, end="", flush=True)       
+                clean = _ansi_re.sub("", line)        
                 log_f.write(clean)
                 output_lines.append(clean)
             proc.wait(timeout=600)
@@ -981,12 +965,7 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
                     except Exception:
                         pass
 
-        # Extraer ruta del .cap que guardó wifite (aunque no crackee)
-        # Wifite guarda en: hs/handshake_ESSID_BSSID_DATE.cap
         wifite_cap = None
-        # Capturar ruta del .cap de wifite — dos posibles formatos:
-        # "saving copy of handshake to hs/..."  (captura nueva)
-        # "Using handshake from hs/..."         (reutilizando existente)
         cap_patterns = [
             r"saving copy of handshake to (\S+\.cap)",
             r"[Uu]sing handshake from (\S+\.cap)",
@@ -1016,7 +995,6 @@ def _attack_wifite(mon_iface: str, network: WifiNetwork) -> tuple[bool, str]:
         else:
             wifite_cap = None
 
-        # cracked = SOLO si encontramos contraseña real (no depender del returncode)
         cracked = bool(password)
         if not cracked and proc.returncode != 0:
             print_warning(f"Wifite terminó sin contraseña (código {proc.returncode}).")
@@ -1329,7 +1307,6 @@ def run_wifi_audit():
     console.print()
     _render_networks_table(networks)
 
-    # Filtrar solo redes con encriptación (no atacar redes abiertas sin permiso explícito)
     attackable = [n for n in networks if n.enc.upper() not in ("", "—")]
 
     # Seleccionar red objetivo
@@ -1395,10 +1372,9 @@ def run_wifi_audit():
             )
         if rockyou_path and Path(rockyou_path).exists():
             print_info("Iniciando método manual con aircrack-ng...")
-            # Si wifite ya capturó un handshake, usarlo directamente
             cracked, password = _attack_aircrack(
                 mon_iface, target_net, rockyou_path,
-                existing_cap=wifite_cap   # puede ser None → captura nueva
+                existing_cap=wifite_cap
             )
             if cracked:
                 method_used = "aircrack-ng + rockyou"
