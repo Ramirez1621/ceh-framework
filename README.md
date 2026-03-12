@@ -1,6 +1,6 @@
 # CEH Framework — Automation Toolkit
-**v1.1.0 · BlueShift**  
-*Certified Ethical Hacker — Multi-distro Pentesting Automation*
+**v1.1.0**  
+*Ethical Hacker — Multi-distro Pentesting Automation*
 
 ---
 
